@@ -2,7 +2,10 @@
     <div class="panel-heading">
         <div class="row">
             <div class="col-xs-12">
-                <h3>Name goes here</h3>
+                <h3>{{contact.name}}</h3>
+            </div>
+            <div class="col-xs-6">
+                <img src="{{contact.imageUrl}}" alt="{{contact.name}}" style="max-height: 100px;">
             </div>
             <div class="col-xs-6 clearfix pull-right">
                 <a href="#" type="button" class="btn btn-primary">Edit</a>
@@ -13,8 +16,8 @@
     <div class="panel-body">
         <div class="row">
             <div class="col-xs-12">
-                <p>email: </p>
-                <p>phone: </p>
+                <p>email: {{contact.email}}</p>
+                <p>phone: {{contact.phone}}</p>
             </div>
         </div>
     </div>
