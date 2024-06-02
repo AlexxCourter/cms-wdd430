@@ -5,7 +5,7 @@
                 <h3>Contacts</h3>
             </div>
             <div class="col-xs-4">
-                <a href="#" type="button" class="btn btn-success">New Contact</a>
+                <a (click)="onNewContact()" type="button" class="btn btn-success">New Contact</a>
             </div>
         </div>
         
@@ -16,7 +16,7 @@
             <div class="col-xs-12">
                 <cms-contact-item *ngFor="let contact of contacts"
                     [contact]="contact"
-                    (click)="onSelected(contact)"
+                    [id]="contact.id"
                 ></cms-contact-item>
             </div>
         </div>

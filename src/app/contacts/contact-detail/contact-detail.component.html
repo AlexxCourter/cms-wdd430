@@ -8,8 +8,8 @@
                 <img *ngIf="contact.imageUrl.length > 1" src="{{contact.imageUrl}}" alt="{{contact.name}}" style="max-height: 100px;">
             </div>
             <div class="col-xs-6 clearfix pull-right">
-                <a href="#" type="button" class="btn btn-primary">Edit</a>
-                <a href="#" type="button" class="btn btn-danger">Delete</a>
+                <a (click)="onEditContact()" type="button" class="btn btn-primary">Edit</a>
+                <a (click)="onDeleteContact()" type="button" class="btn btn-danger">Delete</a>
             </div>
         </div>
     </div>
