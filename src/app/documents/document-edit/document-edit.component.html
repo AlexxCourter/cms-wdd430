@@ -53,7 +53,7 @@
       </div>
       <div class="row">
         <div class="col-sm-12">
-          <div class="alert alert-danger" *ngIf="!name.valid || !url.valid">The Document title and Document URL are required.</div>
+          <div class="alert alert-danger" *ngIf="(!name.valid && name.touched) || (!url.valid && url.touched)">The Document title and Document URL are required.</div>
         </div>
       </div>
 
