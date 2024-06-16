@@ -18,6 +18,15 @@
             <div class="col-xs-12">
                 <p>email: {{contact.email}}</p>
                 <p>phone: {{contact.phone}}</p>
+                <div 
+                    *ngIf="contact.group != null || contact.group != undefined"
+                    >
+                    <cms-contact-item 
+                        *ngFor="let contacts of contact.group"
+                        [contact]="contacts"
+                        [id]="contacts.id"
+                    ></cms-contact-item>
+                </div>
             </div>
         </div>
     </div>

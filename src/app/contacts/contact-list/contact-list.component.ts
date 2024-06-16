@@ -3,6 +3,7 @@ import { Contact } from '../contact.model';
 import { ContactService } from '../contact.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'cms-contact-list',
@@ -31,5 +32,18 @@ export class ContactListComponent implements OnInit, OnDestroy {
 
   onNewContact(){
     this.router.navigate(['new'], {relativeTo: this.route})
+  }
+
+  drop(event: CdkDragDrop<string[]>) {
+    if (event.previousContainer === event.container) {
+      return;
+    } else {
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex,
+      );
+    }
   }
 }

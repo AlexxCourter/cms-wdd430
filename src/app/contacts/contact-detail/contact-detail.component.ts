@@ -24,6 +24,7 @@ export class ContactDetailComponent {
   }
 
   onEditContact(){
+    this.contactService.startedEditing.next(null);
     this.router.navigate(['edit'], {relativeTo: this.route});
   }
   onDeleteContact(){
