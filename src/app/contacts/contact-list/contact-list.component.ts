@@ -4,6 +4,7 @@ import { ContactService } from '../contact.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
+import { ContactsFilterPipe } from '../contacts-filter.pipe';
 
 @Component({
   selector: 'cms-contact-list',
@@ -13,6 +14,7 @@ import { CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
 export class ContactListComponent implements OnInit, OnDestroy {
 
   subscription: Subscription;
+  term: string;
 
   constructor(private contactService: ContactService, private router: Router, private route: ActivatedRoute) {}
 
@@ -45,5 +47,9 @@ export class ContactListComponent implements OnInit, OnDestroy {
         event.currentIndex,
       );
     }
+  }
+
+  search(value: string){
+    this.term = value;
   }
 }

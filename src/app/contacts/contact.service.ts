@@ -2,6 +2,7 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { Contact } from './contact.model';
 import { MOCKCONTACTS } from './MOCKCONTACTS';
 import { Subject } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -14,8 +15,22 @@ export class ContactService {
 
   maxContactId: number;
 
-  constructor() {
-    this.contacts = MOCKCONTACTS;
+  constructor(private http: HttpClient) {
+    http.get('https://ac-cms-33ea6-default-rtdb.firebaseio.com/contacts.json')
+    .subscribe(
+      (contacts: Contact[]) => {
+        this.contacts = contacts;
+        this.maxContactId = this.getMaxId();
+        //comparator function solved for alphabetizing objects by a property
+        //thanks to this stack overflow answer by Omer Bokhari
+        //https://stackoverflow.com/questions/8900732/sort-objects-in-an-array-alphabetically-on-one-property-of-the-array
+        this.contacts.sort(function(a: Contact, b:Contact){
+          return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+        }) //sorts alphabetically
+        this.contactsChangedEvent.next(this.contacts.slice());
+      },
+      (error: any) => {console.log(error)}
+    );
    }
 
    getContacts(): Contact[] {
@@ -43,7 +58,8 @@ export class ContactService {
       return
     }
     this.contacts.splice(position, 1);
-    this.contactsChangedEvent.next(this.contacts.slice());
+    // this.contactsChangedEvent.next(this.contacts.slice());
+    this.storeContacts();
    }
 
    getMaxId(): number {
@@ -54,7 +70,6 @@ export class ContactService {
         maxId = currentId;
       }
     })
-    console.log(`the MaxId found was: ${maxId}`)
     return maxId;
    }
 
@@ -69,8 +84,9 @@ export class ContactService {
     console.log(this.maxContactId);
     newContact.id = this.maxContactId.toString();
     this.contacts.push(newContact);
-    let contactsClone = this.contacts.slice();
-    this.contactsChangedEvent.next(contactsClone);
+    // let contactsClone = this.contacts.slice();
+    // this.contactsChangedEvent.next(contactsClone);
+    this.storeContacts();
    }
 
    updateContact(originalContact: Contact, newContact: Contact){
@@ -83,8 +99,18 @@ export class ContactService {
     }
     newContact.id = originalContact.id;
     this.contacts[position] = newContact;
-    let ContactsClone = this.contacts.slice();
-    this.contactsChangedEvent.next(ContactsClone);
+    // let ContactsClone = this.contacts.slice();
+    // this.contactsChangedEvent.next(ContactsClone);
+    this.storeContacts();
+   }
+
+   storeContacts(){
+    const header = new HttpHeaders({'contentType': 'application/json'});
+    const data = JSON.stringify(this.getContacts());
+    this.http.put('https://ac-cms-33ea6-default-rtdb.firebaseio.com/contacts.json', data, {'headers':header})
+    .subscribe(()=>{
+      this.contactsChangedEvent.next(this.contacts.slice());
+    })
    }
 
 

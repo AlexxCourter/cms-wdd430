@@ -2,6 +2,7 @@ import { EventEmitter, Injectable } from '@angular/core';
 import { Document } from './document.model';
 import { MOCKDOCUMENTS } from './MOCKDOCUMENTS';
 import { Subject } from 'rxjs';
+import {HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -13,9 +14,23 @@ export class DocumentService {
 
   maxDocumentId : number;
 
-  constructor() {
-    this.documents = MOCKDOCUMENTS;
-    this.maxDocumentId = this.getMaxId();
+  constructor(private http: HttpClient) {
+    http.get('https://ac-cms-33ea6-default-rtdb.firebaseio.com/documents.json')
+    .subscribe(
+      (documents: Document[]) => {
+        this.documents = documents;
+        this.maxDocumentId = this.getMaxId();
+        //comparator function solved for alphabetizing objects by a property
+        //thanks to this stack overflow answer by Omer Bokhari
+        //https://stackoverflow.com/questions/8900732/sort-objects-in-an-array-alphabetically-on-one-property-of-the-array
+        this.documents.sort(function(a: Document, b:Document){
+          return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+        }) //sorts alphabetically
+        this.documentChangedEvent.next(this.documents.slice());
+      },
+      (error: any) => {console.log(error)}
+    );
+
    }
 
    getDocuments(): Document[] {
@@ -42,7 +57,8 @@ export class DocumentService {
       return
     }
     this.documents.splice(position, 1);
-    this.documentChangedEvent.next(this.documents.slice());
+    // this.documentChangedEvent.next(this.documents.slice());
+    this.storeDocuments();
    }
 
    getMaxId(): number {
@@ -64,8 +80,9 @@ export class DocumentService {
     this.maxDocumentId++;
     newDocument.id = this.maxDocumentId.toString();
     this.documents.push(newDocument);
-    let documentsClone = this.documents.slice();
-    this.documentChangedEvent.next(documentsClone);
+    // let documentsClone = this.documents.slice();
+    // this.documentChangedEvent.next(documentsClone);
+    this.storeDocuments();
    }
 
    updateDocument(originalDocument: Document, newDocument: Document){
@@ -78,8 +95,18 @@ export class DocumentService {
     }
     newDocument.id = originalDocument.id;
     this.documents[position] = newDocument;
-    let documentsClone = this.documents.slice();
-    this.documentChangedEvent.next(documentsClone);
+    // let documentsClone = this.documents.slice();
+    // this.documentChangedEvent.next(documentsClone);
+    this.storeDocuments();
+   }
+
+   storeDocuments(){
+    const header = new HttpHeaders({'contentType': 'application/json'});
+    const data = JSON.stringify(this.getDocuments());
+    this.http.put('https://ac-cms-33ea6-default-rtdb.firebaseio.com/documents.json', data, {'headers':header})
+    .subscribe(()=>{
+      this.documentChangedEvent.next(this.documents.slice());
+    })
    }
 
 }
