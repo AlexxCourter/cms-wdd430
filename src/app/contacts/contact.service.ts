@@ -19,7 +19,7 @@ export class ContactService {
     http.get('https://ac-cms-33ea6-default-rtdb.firebaseio.com/contacts.json')
     .subscribe(
       (contacts: Contact[]) => {
-        this.contacts = contacts;
+        this.contacts = contacts.map(contact => {return {...contact, imageUrl: contact.imageUrl ? contact.imageUrl : ""}});
         this.maxContactId = this.getMaxId();
         //comparator function solved for alphabetizing objects by a property
         //thanks to this stack overflow answer by Omer Bokhari

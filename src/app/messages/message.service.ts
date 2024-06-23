@@ -13,7 +13,7 @@ export class MessageService {
   messageChangedEvent = new Subject<Message[]>();
 
   constructor(private http: HttpClient) {
-    http.get('https://ac-cms-33ea6-default-rtdb.firebaseio.com/messsages.json')
+    http.get('https://ac-cms-33ea6-default-rtdb.firebaseio.com/messages.json')
     .subscribe(
       (messages: Message[]) => {
         this.messages = messages;
