@@ -70,7 +70,6 @@ export class ContactEditComponent implements OnInit, OnDestroy {
     if (event.previousContainer === event.container) {
       return;
     } else {
-      console.log(event);
       transferArrayItem(
         event.previousContainer.data,
         event.container.data,
@@ -78,7 +77,6 @@ export class ContactEditComponent implements OnInit, OnDestroy {
         event.currentIndex,
       );
     }
-    console.log(this.groupContacts);
   }
 
   

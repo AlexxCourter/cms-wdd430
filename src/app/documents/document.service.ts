@@ -1,6 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { Document } from './document.model';
-import { MOCKDOCUMENTS } from './MOCKDOCUMENTS';
+
 import { Subject } from 'rxjs';
 import {HttpClient, HttpHeaders } from '@angular/common/http';
 
@@ -15,11 +15,16 @@ export class DocumentService {
   maxDocumentId : number;
 
   constructor(private http: HttpClient) {
-    http.get('https://ac-cms-33ea6-default-rtdb.firebaseio.com/documents.json')
+    this.getDocsFromServer()
+   }
+
+  getDocsFromServer(){
+    this.http.get('http://localhost:3000/documents')
     .subscribe(
-      (documents: Document[]) => {
-        this.documents = documents;
-        this.maxDocumentId = this.getMaxId();
+      (documents) => {
+        console.log(documents)
+        this.documents = documents['documentList'];
+        
         //comparator function solved for alphabetizing objects by a property
         //thanks to this stack overflow answer by Omer Bokhari
         //https://stackoverflow.com/questions/8900732/sort-objects-in-an-array-alphabetically-on-one-property-of-the-array
@@ -30,8 +35,7 @@ export class DocumentService {
       },
       (error: any) => {console.log(error)}
     );
-
-   }
+  }
 
    getDocuments(): Document[] {
     return this.documents.slice();
@@ -56,9 +60,16 @@ export class DocumentService {
     if (position < 0) {
       return
     }
-    this.documents.splice(position, 1);
-    // this.documentChangedEvent.next(this.documents.slice());
-    this.storeDocuments();
+    this.http.delete('http://localhost:3000/documents/' + document.id)
+    .subscribe(
+      (response: Response) => {
+        this.documents.splice(position, 1);
+        this.documents.sort(function(a: Document, b:Document){
+          return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+        }) //sorts alphabetically
+        this.documentChangedEvent.next(this.documents.slice());
+      }
+    )
    }
 
    getMaxId(): number {
@@ -78,11 +89,19 @@ export class DocumentService {
       return;
     }
     this.maxDocumentId++;
-    newDocument.id = this.maxDocumentId.toString();
-    this.documents.push(newDocument);
-    // let documentsClone = this.documents.slice();
-    // this.documentChangedEvent.next(documentsClone);
-    this.storeDocuments();
+    newDocument.id = '';
+
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    this.http.post<{message: string, document: Document}>('http://localhost:3000/documents', newDocument, {headers: headers})
+    .subscribe(
+      (responseData) => {
+        this.documents.push(responseData.document);
+        this.documents.sort(function(a: Document, b:Document){
+          return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+        }) //sorts alphabetically
+        this.documentChangedEvent.next(this.documents.slice());
+      }
+    )
    }
 
    updateDocument(originalDocument: Document, newDocument: Document){
@@ -94,10 +113,23 @@ export class DocumentService {
       return;
     }
     newDocument.id = originalDocument.id;
-    this.documents[position] = newDocument;
+
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+
+    // update database
+    this.http.put('http://localhost:3000/documents/' + originalDocument.id,
+      newDocument, { headers: headers })
+      .subscribe(
+        (response: Response) => {
+          this.documents[position] = newDocument;
+          this.documents.sort(function(a: Document, b:Document){
+            return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+          }) //sorts alphabetically
+          this.documentChangedEvent.next(this.documents.slice());
+        }
+      );
     // let documentsClone = this.documents.slice();
     // this.documentChangedEvent.next(documentsClone);
-    this.storeDocuments();
    }
 
    storeDocuments(){

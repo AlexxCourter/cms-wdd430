@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import { Message } from '../message.model';
 import { MessageService } from '../message.service';
+import { NgForm } from '@angular/forms';
 
 @Component({
   selector: 'cms-message-edit',
@@ -14,9 +15,15 @@ export class MessageEditComponent {
 
   constructor(private msgService : MessageService){}
 
-  onSendMessage(){
-    let message = new Message('000', this.subjectInputRef.nativeElement.value, this.msgInputRef.nativeElement.value, "5")
+  onSubmit(form: NgForm){
+    let value = form.value;
+    console.log(form.value);
+    let message = new Message(this.msgService.getMaxId().toString(), value.subject, value.message, "101")
     this.msgService.addMessage(message);
+  }
+
+  onClear(){
+
   }
 
 

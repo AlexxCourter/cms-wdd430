@@ -16,10 +16,11 @@ export class ContactService {
   maxContactId: number;
 
   constructor(private http: HttpClient) {
-    http.get('https://ac-cms-33ea6-default-rtdb.firebaseio.com/contacts.json')
+    http.get('http://localhost:3000/contacts')
     .subscribe(
-      (contacts: Contact[]) => {
-        this.contacts = contacts.map(contact => {return {...contact, imageUrl: contact.imageUrl ? contact.imageUrl : ""}});
+      (contacts) => {
+        console.log(contacts);
+        this.contacts = contacts['contactList'].map(contact => {return {...contact, imageUrl: contact.imageUrl ? contact.imageUrl : ""}});
         this.maxContactId = this.getMaxId();
         //comparator function solved for alphabetizing objects by a property
         //thanks to this stack overflow answer by Omer Bokhari
@@ -57,9 +58,18 @@ export class ContactService {
     if (position < 0) {
       return
     }
-    this.contacts.splice(position, 1);
-    // this.contactsChangedEvent.next(this.contacts.slice());
-    this.storeContacts();
+
+    this.http.delete('http://localhost:3000/contacts/' + contact.id)
+    .subscribe(
+      (response) => {
+        this.contacts.splice(position, 1);
+        this.contacts.sort(function(a: Contact, b:Contact){
+          return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+        }) //sorts alphabetically
+        this.contactsChangedEvent.next(this.contacts.slice());
+      }
+    )
+
    }
 
    getMaxId(): number {
@@ -74,19 +84,27 @@ export class ContactService {
    }
 
    addContact(newContact: Contact){
-    if(this.maxContactId == undefined){
-      this.maxContactId = this.getMaxId()
-    }
     if(newContact === undefined || newContact === null){
       return;
     }
-    this.maxContactId++;
-    console.log(this.maxContactId);
-    newContact.id = this.maxContactId.toString();
-    this.contacts.push(newContact);
-    // let contactsClone = this.contacts.slice();
-    // this.contactsChangedEvent.next(contactsClone);
-    this.storeContacts();
+    newContact.id = '';
+
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    
+    this.http.post<{ message: string, contact: Contact }>('http://localhost:3000/contacts/',
+      newContact,
+      { headers: headers })
+      .subscribe(
+        (responseData) => {
+          // add new document to documents
+          this.contacts.push(responseData.contact);
+          this.contacts.sort(function(a: Contact, b:Contact){
+            return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+          }) //sorts alphabetically
+          this.contactsChangedEvent.next(this.contacts.slice());
+        }
+      );
+    
    }
 
    updateContact(originalContact: Contact, newContact: Contact){
@@ -98,10 +116,20 @@ export class ContactService {
       return;
     }
     newContact.id = originalContact.id;
-    this.contacts[position] = newContact;
-    // let ContactsClone = this.contacts.slice();
-    // this.contactsChangedEvent.next(ContactsClone);
-    this.storeContacts();
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+
+    // update database
+    this.http.put('http://localhost:3000/contacts/' + originalContact.id,
+      newContact, { headers: headers })
+      .subscribe(
+        (response) => {
+          this.contacts[position] = newContact;
+          this.contacts.sort(function(a: Contact, b:Contact){
+            return (a.name < b.name) ? -1 : (a.name > b.name) ? 1 : 0;
+          }) //sorts alphabetically
+          this.contactsChangedEvent.next(this.contacts.slice());
+        }
+      );
    }
 
    storeContacts(){

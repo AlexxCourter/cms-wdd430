@@ -13,11 +13,12 @@ export class MessageService {
   messageChangedEvent = new Subject<Message[]>();
 
   constructor(private http: HttpClient) {
-    http.get('https://ac-cms-33ea6-default-rtdb.firebaseio.com/messages.json')
+    http.get('http://localhost:3000/messages')
     .subscribe(
-      (messages: Message[]) => {
-        this.messages = messages;
-        this.maxMessageId = this.getMaxId();
+      (messages) => {
+        console.log(messages);
+        this.messages = messages['messageList'];
+        // this.maxMessageId = this.getMaxId();
         //comparator function solved for alphabetizing objects by a property
         //thanks to this stack overflow answer by Omer Bokhari
         //https://stackoverflow.com/questions/8900732/sort-objects-in-an-array-alphabetically-on-one-property-of-the-array
@@ -57,9 +58,24 @@ export class MessageService {
   
 
   addMessage(message: Message){
-    this.messages.push(message);
-    this.storeMessages();
-    // this.messageChangedEvent.next(this.messages.slice());
+    if (!message){
+      return;
+    }
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+
+    message.id = '';
+    console.log(message)
+    // add to database
+    this.http.post<{ message: string, newMessage: Message }>('http://localhost:3000/messages',
+      message,
+      { headers: headers })
+      .subscribe(
+        (responseData) => {
+          // add new
+          this.messages.push(responseData.newMessage);
+          this.messageChangedEvent.next(this.messages.slice());
+        }
+      );
   }
 
   storeMessages(){
